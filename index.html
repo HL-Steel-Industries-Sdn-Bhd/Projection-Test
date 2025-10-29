@@ -12,11 +12,27 @@
       text-align: center;
       padding: 40px;
     }
+    /* 计数器（左上角固定） */
+    #refresh-counter {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      color: #0f0;
+      border: 1px solid #444;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      z-index: 9999;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+    }
+
     table {
       border-collapse: collapse;
       width: 90%;
       max-width: 800px;
-      margin: auto;
+      margin: 60px auto 0 auto; /* 留出空间给左上角计数器 */
     }
     th, td {
       border: 1px solid #444;
@@ -28,6 +44,9 @@
   </style>
 </head>
 <body>
+  <!-- 左上角计数器 -->
+  <div id="refresh-counter">Refresh: 0</div>
+
   <h1>HL Steel Production Dashboard</h1>
   <table id="data-table">
     <thead></thead>
@@ -36,6 +55,25 @@
 
   <script>
     const gsScriptURL = "https://script.google.com/macros/s/AKfycbz7xTlSAxub0hLcCWp6O7_pPtkYWBmLyKfipvcSbNAt9D4490IGgpMgZnpWjEu4tR7Bhg/exec";
+
+    // —— 我加的计数器逻辑（只影响左上角，不动你的 fetch 逻辑） —— //
+    (function updateRefreshCounter() {
+      try {
+        const key = 'hl_dashboard_refresh_count_v1';
+        let count = parseInt(localStorage.getItem(key) || '0', 10);
+        count = (isNaN(count) ? 0 : count) + 1;
+        localStorage.setItem(key, String(count));
+        const el = document.getElementById('refresh-counter');
+        el.textContent = `Refresh: ${count}`;
+      } catch (e) {
+        // 若 localStorage 被禁用就不抛错，继续执行
+        console.error('refresh counter error', e);
+      }
+    })();
+
+    // 每30秒整页刷新一次（证明页面有 reload）
+    setTimeout(() => location.reload(), 30000);
+    // —— 计数器逻辑结束 —— //
 
     async function loadData() {
       try {
@@ -99,3 +137,4 @@
   </script>
 </body>
 </html>
+
