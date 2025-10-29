@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HL Steel Dashboard Demo</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #000;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { font-size: 2.5em; margin-bottom: 20px; }
+    .line {
+      border: 2px solid #444;
+      border-radius: 20px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 600px;
+      box-shadow: 0 0 20px rgba(0,255,0,0.2);
+    }
+    .status {
+      font-size: 3em;
+      margin: 10px 0;
+    }
+    .remark {
+      color: #aaa;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>HL Steel Production Dashboard</h1>
+  <div id="container">Loading data...</div>
+
+  <script>
+    const GAS_URL = https://script.google.com/macros/s/AKfycbwXAyO91mvJYAqGxM-gY27uzhLjLYjKGUs8qa3I1CehCsfOhBMGsTYZKkULWJq-6ELPDg/exec";
+
+    async function loadData() {
+      try {
+        const res = await fetch(GAS_URL + "?t=" + Date.now());
+        const data = await res.json();
+
+        const container = document.getElementById("container");
+        container.innerHTML = ""; // 清空旧数据
+
+        data.forEach(row => {
+          const div = document.createElement("div");
+          div.className = "line";
+          div.innerHTML = `
+            <h2>${row.Title}</h2>
+            <div class="status">${row.Status}</div>
+            <div class="remark">${row.Remark}</div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById("container").innerText = "⚠️ 数据载入失败";
+      }
+    }
+
+    loadData();
+    setInterval(loadData, 10000); // 每10秒自动更新
+  </script>
+</body>
+</html>
