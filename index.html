@@ -9,77 +9,93 @@
       font-family: "Segoe UI", Arial, sans-serif;
       background-color: #111;
       color: #eee;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      text-align: center;
       padding: 40px;
-    }
-    h1 {
-      font-size: 2em;
-      color: #0af;
-      margin-bottom: 20px;
     }
     table {
       border-collapse: collapse;
       width: 90%;
       max-width: 800px;
+      margin: auto;
     }
     th, td {
-      border: 1px solid #555;
+      border: 1px solid #444;
       padding: 10px;
-      text-align: left;
     }
     th {
-      background-color: #222;
-    }
-    tr:nth-child(even) {
-      background-color: #1a1a1a;
+      background: #222;
     }
   </style>
 </head>
 <body>
   <h1>HL Steel Production Dashboard</h1>
   <table id="data-table">
-    <thead>
-      <tr><th>Title</th><th>Status</th><th>Remark</th></tr>
-    </thead>
-    <tbody id="data-body">
-      <tr><td colspan="3">Loading...</td></tr>
-    </tbody>
+    <thead></thead>
+    <tbody></tbody>
   </table>
 
   <script>
-    const gsScriptURL = "在这里放你的 Google Script /exec 链接";
+    const gsScriptURL = "https://script.google.com/macros/s/AKfycbz7xTlSAxub0hLcCWp6O7_pPtkYWBmLyKfipvcSbNAt9D4490IGgpMgZnpWjEu4tR7Bhg/exec";
 
     async function loadData() {
       try {
-        const response = await fetch(gsScriptURL);
-        const data = await response.json();
+        const res = await fetch(gsScriptURL);
+        const data = await res.json();
+        const table = document.getElementById("data-table");
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
 
-        const tbody = document.getElementById("data-body");
-        tbody.innerHTML = ""; // 清空原有行
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
 
-        // 跳过标题行，从索引 1 开始
-        for (let i = 1; i < data.length; i++) {
-          const row = data[i];
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.A}</td>
-            <td>${row.B}</td>
-            <td>${row.C}</td>
-          `;
-          tbody.appendChild(tr);
+        // 如果是二维数组（[["Title","Status","Remark"], ["A","B","C"], ...]）
+        if (Array.isArray(data[0])) {
+          const headers = data[0];
+          const headRow = document.createElement("tr");
+          headers.forEach(h => {
+            const th = document.createElement("th");
+            th.textContent = h;
+            headRow.appendChild(th);
+          });
+          thead.appendChild(headRow);
+
+          for (let i = 1; i < data.length; i++) {
+            const tr = document.createElement("tr");
+            data[i].forEach(cell => {
+              const td = document.createElement("td");
+              td.textContent = cell ?? "";
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          }
+        } else {
+          // 如果是对象 [{A:..., B:..., C:...}, ...]
+          const keys = Object.keys(data[0] || {});
+          const headRow = document.createElement("tr");
+          keys.forEach(k => {
+            const th = document.createElement("th");
+            th.textContent = k;
+            headRow.appendChild(th);
+          });
+          thead.appendChild(headRow);
+
+          data.forEach(row => {
+            const tr = document.createElement("tr");
+            keys.forEach(k => {
+              const td = document.createElement("td");
+              td.textContent = row[k] ?? "";
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
         }
-      } catch (err) {
-        document.getElementById("data-body").innerHTML =
-          `<tr><td colspan="3">⚠️ 数据载入失败</td></tr>`;
-        console.error(err);
+      } catch (e) {
+        document.body.innerHTML += `<p>⚠️ 数据载入失败</p>`;
+        console.error(e);
       }
     }
 
     loadData();
-    // 每30秒自动刷新
-    setInterval(loadData, 30000);
   </script>
 </body>
 </html>
